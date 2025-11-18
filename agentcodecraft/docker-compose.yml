@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://agentcodecraft:password@db:5432/agentcodecraft
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-GEMINI_API_KEY_PLACEHOLDER}
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+    depends_on:
+      - db
+    volumes:
+      - ./policies:/app/policies
+      - ./examples:/app/examples
+    restart: unless-stopped
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+
+  frontend:
+    build: .
+    ports:
+      - "8501:8501"
+    environment:
+      - AGENTCODECRAFT_API=http://backend:8000
+    depends_on:
+      - backend
+    restart: unless-stopped
+    command: streamlit run frontend/streamlit_app.py --server.port 8501 --server.address 0.0.0.0
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=agentcodecraft
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=agentcodecraft
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
+
