@@ -1,0 +1,19 @@
+profile:
+  name: basic_python_security
+  domain: python
+  version: "1.0"
+rules:
+  - key: no_eval
+    description: "Do not use eval()"
+    category: security
+    expression: "eval\\("
+    severity: high
+    auto_fixable: false
+  - key: no_hardcoded_password
+    description: "Avoid hardcoded passwords"
+    category: security
+    expression: "password\\s*=\\s*[\"'].*[\"']"
+    severity: medium
+    auto_fixable: false
+
+
