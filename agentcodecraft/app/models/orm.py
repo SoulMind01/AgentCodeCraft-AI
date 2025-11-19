@@ -50,6 +50,7 @@ class PolicyRule(Base):
     expression = Column(String, nullable=False)
     severity = Column(String, default="medium", nullable=False)
     auto_fixable = Column(Boolean, default=False)
+    fix_prompt = Column(String, nullable=False)
 
     profile = relationship("PolicyProfile", back_populates="rules")
 

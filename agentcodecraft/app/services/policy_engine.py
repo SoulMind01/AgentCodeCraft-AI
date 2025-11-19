@@ -22,6 +22,7 @@ class PolicyViolation:
     rule_key: str
     message: str
     severity: str
+    fix_prompt: str
 
 
 class PolicyEngine:
@@ -74,6 +75,7 @@ class PolicyEngine:
                 expression=str(rule.get("expression", "")),
                 severity=rule.get("severity", "medium"),
                 auto_fixable=bool(rule.get("auto_fixable", False)),
+                fix_prompt=rule.get("fix_prompt", "The given code violates the given policy rule. Please fix the code to comply with the policy rule.")
             )
             profile.rules.append(rule_obj)
 
@@ -102,6 +104,7 @@ class PolicyEngine:
                             rule_key=rule.rule_key,
                             message=rule.description,
                             severity=rule.severity,
+                            fix_prompt=rule.fix_prompt,
                         )
                     )
             except re.error:
@@ -111,6 +114,7 @@ class PolicyEngine:
                         rule_key=rule.rule_key,
                         message=f"Invalid regex: {pattern}",
                         severity="high",
+                        fix_prompt=rule.fix_prompt,
                     )
                 )
         return violations

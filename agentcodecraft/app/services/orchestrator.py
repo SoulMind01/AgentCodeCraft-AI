@@ -46,9 +46,14 @@ class AgentCodeCraftApp:
         if not policy_profile:
             raise ValueError(f"Policy profile {session.policy_profile_id} not found.")
 
+        policy_violations = self.policy_engine.evaluate(code, policy_profile)
+        print(f"Policy violations: {policy_violations}")
         start_time = time.perf_counter()
+
         adapter_result: RefactorResult = self.adapter.generate_refactor(
-            code=code, ast_summary=ast_summary, policies=policy_profile.rules, file_path=file_path
+            code=code, 
+            violate_policies=policy_violations, 
+            file_path=file_path
         )
         latency_ms = int((time.perf_counter() - start_time) * 1000)
 
@@ -68,7 +73,7 @@ class AgentCodeCraftApp:
             db.add(suggestion)
             suggestions.append(suggestion)
 
-        policy_violations = self.policy_engine.evaluate(adapter_result.refactored_code, policy_profile)
+
 
         complexity_delta = self.static_analysis.summarize_complexity(code, adapter_result.refactored_code)
         policy_score = self.policy_engine.score_compliance(
