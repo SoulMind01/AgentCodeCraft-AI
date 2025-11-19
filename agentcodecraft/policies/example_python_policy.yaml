@@ -9,11 +9,13 @@ rules:
     expression: "eval\\("
     severity: high
     auto_fixable: false
+    fix_prompt: "Replace the eval() call with a secure alternative"
   - key: no_hardcoded_password
     description: "Avoid hardcoded passwords"
     category: security
     expression: "password\\s*=\\s*[\"'].*[\"']"
     severity: medium
     auto_fixable: false
+    fix_prompt: "Replace the hardcoded password with its SHA-256 hash"
 
 
