@@ -40,10 +40,6 @@ class GeminiAdapter:
     Replace with real API calls once Gemini Pro 2.5 + ADK integration is available.
     """
 
-    def test_connection(self) -> bool:
-        """Simulate adapter health check."""
-        return True
-
     def generate_refactor(
         self, *, code: str, ast_summary: str | None, policies: Sequence[PolicyRule], file_path: str
     ) -> RefactorResult:
