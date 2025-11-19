@@ -47,6 +47,7 @@ class PolicyEngine:
     ) -> orm.PolicyProfile:
         """Create a PolicyProfile and associated rules from a document."""
         overrides = overrides or {}
+        if not bool(document): raise ValueError("Blank document")
         payload = self.parse_policy_document(document)
         profile_data = payload.get("profile", {})
         rules_data = payload.get("rules", [])
