@@ -48,7 +48,9 @@ class AgentCodeCraftApp:
 
         start_time = time.perf_counter()
         adapter_result: RefactorResult = self.adapter.generate_refactor(
-            code=code, ast_summary=ast_summary, policies=policy_profile.rules, file_path=file_path
+            code=code, 
+            policies=policy_profile.rules, 
+            file_path=file_path
         )
         latency_ms = int((time.perf_counter() - start_time) * 1000)
 

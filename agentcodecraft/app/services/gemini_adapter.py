@@ -41,7 +41,7 @@ class GeminiAdapter:
     """
 
     def generate_refactor(
-        self, *, code: str, ast_summary: str | None, policies: Sequence[PolicyRule], file_path: str
+        self, *, code: str, policies: Sequence[PolicyRule], file_path: str
     ) -> RefactorResult:
         """
         Produce refactoring suggestions based on the provided code.
