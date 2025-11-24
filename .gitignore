@@ -4,6 +4,7 @@
 *$py.class
 *.so
 .Python
+.env
 
 # Testing
 **/.pytest_cache/
@@ -31,3 +32,8 @@ Thumbs.db
 *.sqlite3
 
 context/*
+
+# Assessment and planning documents (local only)
+# Ignore all .md files except README.md
+*.md
+!README.md

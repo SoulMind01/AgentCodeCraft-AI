@@ -14,9 +14,17 @@ from app.services.gemini_adapter import GeminiAdapter, RefactorResult
 from app.services.policy_engine import PolicyEngine, PolicyViolation
 from app.services.static_analysis import StaticAnalysisService
 
+# ADK agent integration (feature flag)
+try:
+    from app.services.adk_agent import AgentCodeCraftAgent
+    ADK_AVAILABLE = True
+except ImportError:
+    ADK_AVAILABLE = False
+    AgentCodeCraftAgent = None
+
 
 class AgentCodeCraftApp:
-    """Coordinates refactoring, policy checks, and metrics collection."""
+    """Coordinates refactoring using ADK agent (if available) or manual orchestration."""
 
     def __init__(
         self,
@@ -24,10 +32,18 @@ class AgentCodeCraftApp:
         adapter: GeminiAdapter,
         policy_engine: PolicyEngine,
         static_analysis: StaticAnalysisService,
+        use_adk: bool = False,  # Feature flag
     ):
         self.adapter = adapter
         self.policy_engine = policy_engine
         self.static_analysis = static_analysis
+        self.use_adk = use_adk and ADK_AVAILABLE
+        
+        # Create ADK agent if enabled
+        if self.use_adk:
+            self.adk_agent = AgentCodeCraftAgent()
+        else:
+            self.adk_agent = None
 
     def run_refactor_session(
         self,
@@ -38,7 +54,35 @@ class AgentCodeCraftApp:
         ast_summary: str | None = None,
         file_path: str,
     ) -> Tuple[List[orm.RefactorSuggestion], orm.ComplianceMetric, List[PolicyViolation], str]:
-        """Execute the end-to-end refactoring flow for a session."""
+        """
+        Execute the end-to-end refactoring flow for a session.
+        
+        Uses ADK agent if enabled (use_adk=True), otherwise uses manual orchestration.
+        """
+        if self.use_adk and self.adk_agent:
+            return self._run_with_adk(db, session, code, file_path)
+        else:
+            return self._run_manual(db, session, code, file_path)
+    
+    def _run_with_adk(
+        self, db: Session, session: orm.RefactorSession, code: str, file_path: str
+    ) -> Tuple[List[orm.RefactorSuggestion], orm.ComplianceMetric, List[PolicyViolation], str]:
+        """
+        Execute using ADK agent.
+        
+        The ADK agent already returns ORM objects directly, so no conversion is needed.
+        """
+        return self.adk_agent.run_refactor_session(
+            db=db,
+            session=session,
+            code=code,
+            file_path=file_path
+        )
+    
+    def _run_manual(
+        self, db: Session, session: orm.RefactorSession, code: str, file_path: str
+    ) -> Tuple[List[orm.RefactorSuggestion], orm.ComplianceMetric, List[PolicyViolation], str]:
+        """Execute using existing manual orchestration (fallback)."""
         session.status = "running"
         db.commit()
 
@@ -72,8 +116,6 @@ class AgentCodeCraftApp:
             )
             db.add(suggestion)
             suggestions.append(suggestion)
-
-
 
         complexity_delta = self.static_analysis.summarize_complexity(code, adapter_result.refactored_code)
         policy_score = self.policy_engine.score_compliance(
