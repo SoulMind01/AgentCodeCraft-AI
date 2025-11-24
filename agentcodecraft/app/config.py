@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     database_url: str = Field(default="sqlite:///./agentcodecraft.db")
     gemini_api_key: str = Field(default="GEMINI_API_KEY_PLACEHOLDER")
     log_level: str = Field(default="INFO")
+    use_adk: bool = Field(default=False)  # ADK feature flag
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
