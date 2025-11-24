@@ -92,6 +92,15 @@ def render_refactor_workspace():
             st.error(f"Refactor request failed: {exc.response.text}")
 
 
+def import_policy(name: str, domain: str, version: str, document: str):
+    try:
+        payload = {"name": name or None, "domain": domain or None, "version": version or None, "document": document}
+        response = upload_policy(payload)
+        st.success(f"Imported policy {response['name']} ({response['policy_profile_id']})")
+    except requests.HTTPError as exc:
+        st.error(f"Failed to import policy: {exc.response.text}")
+
+
 def render_policy_studio():
     st.header("Policy Studio")
     name = st.text_input("Policy Name")
@@ -100,12 +109,10 @@ def render_policy_studio():
     document = st.text_area("Policy Document (YAML/JSON)", height=250)
 
     if st.button("Import Policy Profile"):
-        try:
-            payload = {"name": name or None, "domain": domain or None, "version": version or None, "document": document}
-            response = upload_policy(payload)
-            st.success(f"Imported policy {response['name']} ({response['policy_profile_id']})")
-        except requests.HTTPError as exc:
-            st.error(f"Failed to import policy: {exc.response.text}")
+        if not bool(document):
+            st.warning("Please provide a policy document.")
+        else:
+            import_policy(name, domain, version, document)
 
     st.subheader("Available Profiles")
     try:
