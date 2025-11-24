@@ -4,6 +4,7 @@
 *$py.class
 *.so
 .Python
+.env
 
 # Testing
 **/.pytest_cache/
@@ -31,3 +32,9 @@ Thumbs.db
 *.sqlite3
 
 context/*
+
+# Assessment and planning documents (local only)
+PROJECT_ASSESSMENT.md
+ADK_IMPLEMENTATION_GUIDE.md
+SUMMARY_ANSWERS.md
+ACTION_CHECKLIST.md
