@@ -34,7 +34,6 @@ Thumbs.db
 context/*
 
 # Assessment and planning documents (local only)
-PROJECT_ASSESSMENT.md
-ADK_IMPLEMENTATION_GUIDE.md
-SUMMARY_ANSWERS.md
-ACTION_CHECKLIST.md
+# Ignore all .md files except README.md
+*.md
+!README.md
