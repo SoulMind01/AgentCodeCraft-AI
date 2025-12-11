@@ -1,0 +1,287 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+body {
+  background-color: #f5f5f7;
+  color: #1f2933;
+}
+
+.app-root {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  background-color: #ffffff;
+  border-right: 1px solid #d0d7de;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sidebar-title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar-link {
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #374151;
+  text-decoration: none;
+}
+
+.sidebar-link:hover {
+  background-color: #e5e7eb;
+}
+
+.sidebar-link-active {
+  background-color: #111827;
+  color: #ffffff;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  height: 48px;
+  border-bottom: 1px solid #d0d7de;
+  background-color: #ffffff;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.topbar-user-name {
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.app-content {
+  padding: 16px;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.page-narrow {
+  max-width: 720px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section h2 {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.box {
+  background-color: #ffffff;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.table-container {
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  background-color: #ffffff;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th,
+.table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+.table thead {
+  background-color: #f3f4f6;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+}
+
+.small-muted {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.small-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.small-list li {
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.scroll {
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+}
+
+.status-queued {
+  background-color: #e5e7eb;
+  color: #111827;
+}
+
+.status-running {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-done {
+  background-color: #def7ec;
+  color: #047857;
+}
+
+.status-failed {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.button-primary {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border-radius: 4px;
+  border: none;
+  background-color: #111827;
+  color: #ffffff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.button-primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.button-toggle {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid #d0d7de;
+  background-color: #ffffff;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.button-toggle.active {
+  background-color: #111827;
+  color: #ffffff;
+  border-color: #111827;
+}
+
+.button-group {
+  display: flex;
+  gap: 8px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.link {
+  font-size: 13px;
+  color: #1d4ed8;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.link-button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: #1d4ed8;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.state-message {
+  padding: 16px 0;
+  text-align: center;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.state-message-error {
+  color: #b91c1c;
+}
+
+.page.center {
+  align-items: center;
+  justify-content: center;
+}
