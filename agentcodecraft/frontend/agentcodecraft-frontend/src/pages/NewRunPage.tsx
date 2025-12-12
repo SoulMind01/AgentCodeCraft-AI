@@ -1,5 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Heading,
+  Stack,
+  HStack,
+  Button,
+  FormControl,
+  FormLabel,
+  Select,
+  Checkbox,
+  Text,
+  VStack,
+  useToast,
+} from '@chakra-ui/react';
 import { usePolicies, useStartRefactor } from '../api/hooks';
 import Loader from '../components/shared/Loader';
 import ErrorState from '../components/shared/ErrorState';
@@ -9,6 +23,7 @@ const NewRunPage: React.FC = () => {
   const { data: policies, isLoading, isError } = usePolicies();
   const startRefactor = useStartRefactor();
   const navigate = useNavigate();
+  const toast = useToast();
 
   const [language, setLanguage] = useState<'python' | 'terraform'>('python');
   const [mode, setMode] = useState<'auto' | 'suggest'>('suggest');
@@ -17,7 +32,14 @@ const NewRunPage: React.FC = () => {
   const [files, setFiles] = useState<{ path: string; content: string }[]>([]);
 
   const handleStart = async () => {
-    if (!files.length || !selectedPolicyIds.length) return;
+    if (!files.length || !selectedPolicyIds.length) {
+      toast({
+        status: 'warning',
+        description: 'Please add at least one file and select a policy.',
+      });
+      return;
+    }
+
     const payload: StartRefactorPayload = {
       language,
       mode,
@@ -25,135 +47,153 @@ const NewRunPage: React.FC = () => {
       files,
       policy_ids: selectedPolicyIds,
     };
-    const result = await startRefactor.mutateAsync(payload);
-    navigate(`/runs/${result.run_id}`);
+
+    try {
+      const result = await startRefactor.mutateAsync(payload);
+      navigate(`/runs/${result.run_id}`);
+    } catch {
+      toast({
+        status: 'error',
+        description: 'Failed to start run.',
+      });
+    }
+  };
+
+  const addStubFile = () => {
+    setFiles([
+      {
+        path: 'example.py',
+        content: 'print("hello from stub")',
+      },
+    ]);
   };
 
   return (
-    <div className="page page-narrow">
-      <h1>New Run</h1>
+    <Box maxW="720px">
+      <Heading as="h1" size="md" mb={4}>
+        New Run
+      </Heading>
 
-      <section className="section">
-        <h2>Language</h2>
-        <div className="button-group">
-          <button
-            type="button"
-            className={
-              language === 'python' ? 'button-toggle active' : 'button-toggle'
-            }
-            onClick={() => setLanguage('python')}
+      <Stack spacing={4}>
+        <Box>
+          <FormLabel fontSize="sm">Language</FormLabel>
+          <HStack spacing={2}>
+            <Button
+              size="sm"
+              variant={language === 'python' ? 'solid' : 'outline'}
+              colorScheme="gray"
+              onClick={() => setLanguage('python')}
+            >
+              Python
+            </Button>
+            <Button
+              size="sm"
+              variant={language === 'terraform' ? 'solid' : 'outline'}
+              colorScheme="gray"
+              onClick={() => setLanguage('terraform')}
+            >
+              Terraform
+            </Button>
+          </HStack>
+        </Box>
+
+        <FormControl>
+          <FormLabel fontSize="sm">Mode</FormLabel>
+          <Select
+            size="sm"
+            value={mode}
+            onChange={(e) => setMode(e.target.value as 'auto' | 'suggest')}
           >
-            Python
-          </button>
-          <button
-            type="button"
-            className={
-              language === 'terraform'
-                ? 'button-toggle active'
-                : 'button-toggle'
-            }
-            onClick={() => setLanguage('terraform')}
-          >
-            Terraform
-          </button>
-        </div>
-      </section>
+            <option value="suggest">Suggest only (do not apply)</option>
+            <option value="auto">Auto apply (experimental)</option>
+          </Select>
+        </FormControl>
 
-      <section className="section">
-        <h2>Mode</h2>
-        <select
-          value={mode}
-          onChange={(e) => setMode(e.target.value as 'auto' | 'suggest')}
-        >
-          <option value="suggest">Suggest only (do not apply)</option>
-          <option value="auto">Auto apply (experimental)</option>
-        </select>
-      </section>
-
-      <section className="section">
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            checked={runTests}
+        <FormControl display="flex" alignItems="center">
+          <Checkbox
+            isChecked={runTests}
             onChange={(e) => setRunTests(e.target.checked)}
-          />
-          Run tests / validation
-        </label>
-      </section>
+            size="sm"
+          >
+            Run tests / validation
+          </Checkbox>
+        </FormControl>
 
-      <section className="section">
-        <h2>Policies</h2>
-        {isLoading && <Loader message="Loading policies..." />}
-        {isError && <ErrorState message="Failed to load policies." />}
-        {policies && (
-          <div className="box scroll">
-            {policies.map((p) => {
-              const selected = selectedPolicyIds.includes(p.policy_id);
-              return (
-                <label key={p.policy_id} className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={selected}
-                    onChange={(e) => {
-                      setSelectedPolicyIds((prev) =>
-                        e.target.checked
-                          ? [...prev, p.policy_id]
-                          : prev.filter((id) => id !== p.policy_id)
-                      );
-                    }}
-                  />
-                  <span>{p.name}</span>
-                  <span className="small-muted">
-                    {p.language} v{p.version}
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-        )}
-      </section>
+        <Box>
+          <FormLabel fontSize="sm">Policies</FormLabel>
+          {isLoading && <Loader message="Loading policies..." />}
+          {isError && <ErrorState message="Failed to load policies." />}
+          {policies && (
+            <Box
+              borderWidth="1px"
+              borderRadius="md"
+              p={2}
+              maxH="220px"
+              overflowY="auto"
+              bg="white"
+            >
+              <VStack align="stretch" spacing={1}>
+                {policies.map((p) => {
+                  const selected = selectedPolicyIds.includes(p.policy_id);
+                  return (
+                    <Checkbox
+                      key={p.policy_id}
+                      isChecked={selected}
+                      size="sm"
+                      onChange={(e) => {
+                        setSelectedPolicyIds((prev) =>
+                          e.target.checked
+                            ? [...prev, p.policy_id]
+                            : prev.filter((id) => id !== p.policy_id)
+                        );
+                      }}
+                    >
+                      <HStack justify="space-between">
+                        <Text fontSize="sm">{p.name}</Text>
+                        <Text fontSize="xs" color="gray.500">
+                          {p.language} v{p.version}
+                        </Text>
+                      </HStack>
+                    </Checkbox>
+                  );
+                })}
+              </VStack>
+            </Box>
+          )}
+        </Box>
 
-      <section className="section">
-        <h2>Files</h2>
-        <p className="small-muted">
-          TODO: Replace with drag-and-drop uploader. For now, use a stub file.
-        </p>
-        <button
-          type="button"
-          className="link-button"
-          onClick={() =>
-            setFiles([
-              {
-                path: 'example.py',
-                content: 'print("hello from stub")',
-              },
-            ])
+        <Box>
+          <FormLabel fontSize="sm">Files</FormLabel>
+          <Text fontSize="xs" color="gray.500" mb={1}>
+            TODO: Replace with drag-and-drop uploader. Using stub file for now.
+          </Text>
+          <Button variant="link" size="sm" colorScheme="blue" onClick={addStubFile}>
+            Add example stub file
+          </Button>
+          <VStack align="stretch" spacing={1} mt={2}>
+            {files.map((f) => (
+              <Text key={f.path} fontSize="xs" color="gray.600">
+                {f.path} ({f.content.length} chars)
+              </Text>
+            ))}
+          </VStack>
+        </Box>
+
+        <Button
+          colorScheme="gray"
+          size="sm"
+          alignSelf="flex-start"
+          onClick={handleStart}
+          isDisabled={
+            startRefactor.isPending || !files.length || !selectedPolicyIds.length
           }
+          isLoading={startRefactor.isPending}
+          loadingText="Starting…"
         >
-          Add example stub file
-        </button>
-        <ul className="small-muted">
-          {files.map((f) => (
-            <li key={f.path}>
-              {f.path} ({f.content.length} chars)
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <button
-        type="button"
-        className="button-primary"
-        disabled={
-          startRefactor.isPending ||
-          !files.length ||
-          !selectedPolicyIds.length
-        }
-        onClick={handleStart}
-      >
-        {startRefactor.isPending ? 'Starting…' : 'Start Refactor'}
-      </button>
-    </div>
+          Start Refactor
+        </Button>
+      </Stack>
+    </Box>
   );
 };
 

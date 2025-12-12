@@ -1,5 +1,14 @@
 import React from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link as RouterLink } from 'react-router-dom';
+import {
+  Box,
+  Flex,
+  Heading,
+  Text,
+  SimpleGrid,
+  Link,
+  VStack,
+} from '@chakra-ui/react';
 import { useRun } from '../api/hooks';
 import Loader from '../components/shared/Loader';
 import ErrorState from '../components/shared/ErrorState';
@@ -11,42 +20,50 @@ const RunDetailPage: React.FC = () => {
   if (!runId) return <ErrorState message="Missing run ID." />;
 
   return (
-    <div className="page">
-      <div className="page-header">
-        <div>
-          <h1>Run {runId}</h1>
+    <Box>
+      <Flex justify="space-between" align="center" mb={4}>
+        <Box>
+          <Heading as="h1" size="md">
+            Run {runId}
+          </Heading>
           {run && (
-            <p className="small-muted">
+            <Text fontSize="xs" color="gray.500">
               Model {run.model_version} • Language {run.language}
-            </p>
+            </Text>
           )}
-        </div>
-        <Link to="/runs" className="link">
+        </Box>
+        <Link as={RouterLink} to="/runs" fontSize="sm" color="blue.600">
           Back to runs
         </Link>
-      </div>
+      </Flex>
 
       {isLoading && <Loader />}
       {isError && <ErrorState message="Failed to load run." />}
 
       {run && (
         <>
-          <section className="section-grid">
-            <div className="box">
-              <h2>Status</h2>
-              <p>{run.status}</p>
-            </div>
-            <div className="box">
-              <h2>Compliance</h2>
-              <p>
+          <SimpleGrid columns={[1, 3]} spacing={3} mb={4}>
+            <Box borderWidth="1px" borderRadius="md" p={3} bg="white">
+              <Text fontSize="sm" fontWeight="semibold" mb={1}>
+                Status
+              </Text>
+              <Text fontSize="sm">{run.status}</Text>
+            </Box>
+            <Box borderWidth="1px" borderRadius="md" p={3} bg="white">
+              <Text fontSize="sm" fontWeight="semibold" mb={1}>
+                Compliance
+              </Text>
+              <Text fontSize="sm">
                 {run.compliance_score != null
                   ? `${Math.round(run.compliance_score * 100)}%`
                   : '—'}
-              </p>
-            </div>
-            <div className="box">
-              <h2>Duration</h2>
-              <p>
+              </Text>
+            </Box>
+            <Box borderWidth="1px" borderRadius="md" p={3} bg="white">
+              <Text fontSize="sm" fontWeight="semibold" mb={1}>
+                Duration
+              </Text>
+              <Text fontSize="sm">
                 {run.finished_at
                   ? `${Math.round(
                       (new Date(run.finished_at).getTime() -
@@ -54,40 +71,48 @@ const RunDetailPage: React.FC = () => {
                         1000
                     )} s`
                   : 'In progress'}
-              </p>
-            </div>
-          </section>
+              </Text>
+            </Box>
+          </SimpleGrid>
 
-          <section className="section">
-            <h2>Findings</h2>
-            <p className="small-muted">
+          <Box borderWidth="1px" borderRadius="md" p={3} bg="white" mb={4}>
+            <Text fontSize="sm" fontWeight="semibold" mb={2}>
+              Findings
+            </Text>
+            <Text fontSize="xs" color="gray.500" mb={2}>
               TODO: Replace with richer findings component.
-            </p>
-            <ul className="small-list scroll">
+            </Text>
+            <VStack
+              align="stretch"
+              spacing={1}
+              maxH="180px"
+              overflowY="auto"
+              fontSize="xs"
+            >
               {run.findings.map((f) => (
-                <li key={f.finding_id}>
+                <Text key={f.finding_id}>
                   [{f.severity}] {f.file_path}:{f.line} — rule {f.rule_id} (
                   {f.status})
-                </li>
+                </Text>
               ))}
-            </ul>
-          </section>
+            </VStack>
+          </Box>
 
-          <section className="section">
-            <h2>Artifacts</h2>
-            <ul className="small-list">
+          <Box borderWidth="1px" borderRadius="md" p={3} bg="white">
+            <Text fontSize="sm" fontWeight="semibold" mb={2}>
+              Artifacts
+            </Text>
+            <VStack align="stretch" spacing={1} fontSize="xs">
               {run.artifacts.map((a) => (
-                <li key={a.artifact_id}>
-                  <a href={a.uri} target="_blank" rel="noreferrer">
-                    {a.type} ({a.checksum.slice(0, 8)}…)
-                  </a>
-                </li>
+                <Link key={a.artifact_id} href={a.uri} target="_blank">
+                  {a.type} ({a.checksum.slice(0, 8)}…)
+                </Link>
               ))}
-            </ul>
-          </section>
+            </VStack>
+          </Box>
         </>
       )}
-    </div>
+    </Box>
   );
 };
 

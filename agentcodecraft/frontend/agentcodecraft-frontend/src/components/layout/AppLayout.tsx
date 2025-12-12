@@ -1,7 +1,7 @@
 import React from 'react';
+import { Flex, Box } from '@chakra-ui/react';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
-import '../../index.css';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -9,13 +9,15 @@ interface AppLayoutProps {
 
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   return (
-    <div className="app-root">
+    <Flex minH="100vh" bg="gray.50">
       <Sidebar />
-      <div className="app-main">
+      <Flex direction="column" flex="1">
         <Topbar />
-        <main className="app-content">{children}</main>
-      </div>
-    </div>
+        <Box as="main" p={4} flex="1">
+          {children}
+        </Box>
+      </Flex>
+    </Flex>
   );
 };
 

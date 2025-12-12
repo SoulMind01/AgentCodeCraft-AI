@@ -65,3 +65,73 @@ export interface StartRefactorPayload {
 export interface StartRefactorResponse {
   run_id: string;
 }
+
+export interface PolicyProfile {
+  name: string;
+  domain: string;
+  version: string;
+  policy_profile_id: string;
+  rules: unknown;
+}
+
+export interface RefactorRequestPayload {
+  user_id: string;
+  user_name: string;
+  code: string;
+  language: 'python' | 'terraform';
+  policy_profile_id: string;
+  repo?: string | null;
+  branch?: string | null;
+  file_path?: string | null;
+}
+
+export interface Suggestion {
+  suggestion_id: string;
+  file_path: string;
+  start_line: number;
+  end_line: number;
+  original_code: string;
+  proposed_code: string;
+  rationale: string;
+  confidence_score: number;
+}
+
+export interface ComplianceSummary {
+  policy_score: number;
+  complexity_delta: number;
+  test_pass_rate: number;
+  latency_ms: number;
+  token_usage: number;
+}
+
+export interface Violation {
+  rule_key: string;
+  message: string;
+  severity: 'low' | 'medium' | 'high';
+}
+
+export interface RefactorResult {
+  session: {
+    session_id: string;
+    status: string;
+    language: string;
+    policy_profile_id: string;
+  };
+  suggestions: Suggestion[];
+  compliance: ComplianceSummary;
+  original_code: string;
+  refactored_code: string;
+  violations: Violation[];
+}
+
+export interface ImportPolicyPayload {
+  name?: string | null;
+  domain?: string | null;
+  version?: string | null;
+  document: string;
+}
+
+export interface ImportPolicyResponse {
+  name: string;
+  policy_profile_id: string;
+}

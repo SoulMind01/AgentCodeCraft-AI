@@ -6,6 +6,11 @@ import type {
   Policy,
   StartRefactorPayload,
   StartRefactorResponse,
+  PolicyProfile,
+  RefactorRequestPayload,
+  RefactorResult,
+  ImportPolicyPayload,
+  ImportPolicyResponse,
 } from './types';
 
 const qk = {
@@ -15,7 +20,7 @@ const qk = {
 };
 
 export function useRuns() {
-  return useQuery({
+  return useQuery<RunSummary[]>({
     queryKey: qk.runs,
     queryFn: async () => {
       const { data } = await apiClient.get<RunSummary[]>('/api/runs');
@@ -26,7 +31,7 @@ export function useRuns() {
 
 export function useRun(runId: string) {
   return useQuery<RunDetail>({
-    queryKey: ['runs', runId],
+    queryKey: qk.run(runId),
     queryFn: async () => {
       const { data } = await apiClient.get<RunDetail>(`/api/runs/${runId}`);
       return data;
@@ -41,13 +46,14 @@ export function useRun(runId: string) {
       const stillRunning =
         data.status === 'queued' || data.status === 'running';
 
-      return stillRunning ? 2000 : false; // Stop polling once done/failed
+      // Stop polling once done/failed
+      return stillRunning ? 2000 : false;
     },
   });
 }
 
 export function usePolicies() {
-  return useQuery({
+  return useQuery<Policy[]>({
     queryKey: qk.policies,
     queryFn: async () => {
       const { data } = await apiClient.get<Policy[]>('/api/policies');
@@ -58,7 +64,8 @@ export function usePolicies() {
 
 export function useStartRefactor() {
   const queryClient = useQueryClient();
-  return useMutation({
+
+  return useMutation<StartRefactorResponse, unknown, StartRefactorPayload>({
     mutationFn: async (payload: StartRefactorPayload) => {
       const { data } = await apiClient.post<StartRefactorResponse>(
         '/api/refactor',
@@ -68,6 +75,40 @@ export function useStartRefactor() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: qk.runs });
+    },
+  });
+}
+
+export function usePolicyProfiles() {
+  return useQuery({
+    queryKey: ['policies'],
+    queryFn: async () => {
+      const { data } = await apiClient.get<PolicyProfile[]>('/policies');
+      return data;
+    },
+  });
+}
+
+export function useRefactor() {
+  return useMutation({
+    mutationFn: async (payload: RefactorRequestPayload) => {
+      const { data } = await apiClient.post<RefactorResult>(
+        '/refactor',
+        payload
+      );
+      return data;
+    },
+  });
+}
+
+export function useImportPolicy() {
+  return useMutation({
+    mutationFn: async (payload: ImportPolicyPayload) => {
+      const { data } = await apiClient.post<ImportPolicyResponse>(
+        '/policies/import',
+        payload
+      );
+      return data;
     },
   });
 }
