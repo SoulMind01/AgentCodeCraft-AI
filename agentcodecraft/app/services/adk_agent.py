@@ -110,7 +110,7 @@ class AgentCodeCraftAgent:
         # Both work identically, but Agent is semantically clearer for our use case
         self.llm_agent = Agent(
             name="agentcodecraft_refactorer",
-            model="gemini-2.0-flash-exp",  # Model name as string, not Gemini object
+            model="gemini-2.5-flash",  # Using Flash for cost efficiency and speed
             instruction=AGENT_INSTRUCTIONS,  # Note: 'instruction' (singular), not 'instructions'
             tools=tools,
         )
@@ -146,6 +146,9 @@ class AgentCodeCraftAgent:
 
         session.status = "running"
         db.commit()
+
+        # Track execution time
+        start_time = time.perf_counter()
 
         try:
             # ====================================================================
@@ -200,7 +203,7 @@ class AgentCodeCraftAgent:
             # STEP 5: CALCULATE METRICS (Deterministic - ALWAYS)
             # ====================================================================
             state.current_step = WorkflowStep.METRICS
-            metrics = self._calculate_metrics(code, context, state)
+            metrics = self._calculate_metrics(code, context, state, start_time)
 
             # ====================================================================
             # STEP 6: SAVE RESULTS (Deterministic - ALWAYS)
@@ -472,7 +475,7 @@ class AgentCodeCraftAgent:
     # ====================================================================
 
     def _calculate_metrics(
-        self, original_code: str, context: AgentContext, state: AgentSessionState
+        self, original_code: str, context: AgentContext, state: AgentSessionState, start_time: float = None
     ) -> dict:
         """Step 5: Calculate metrics."""
         try:
@@ -487,11 +490,16 @@ class AgentCodeCraftAgent:
             # Test pass rate (from validation)
             test_pass_rate = context.test_pass_rate
             
+            # Calculate latency if start_time provided
+            latency_ms = 0
+            if start_time:
+                latency_ms = int((time.perf_counter() - start_time) * 1000)
+            
             metrics = {
                 "complexity_delta": complexity_delta,
                 "policy_score": policy_score,
                 "test_pass_rate": test_pass_rate,
-                "latency_ms": 0,  # Would track from agent execution
+                "latency_ms": latency_ms,
                 "token_usage": max(1, len(refactored_code) // 4)
             }
             

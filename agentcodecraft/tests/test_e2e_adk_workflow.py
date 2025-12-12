@@ -4,20 +4,20 @@ End-to-End Test for ADK Agent Workflow (Phase 5).
 Tests the complete workflow from API endpoint through ADK agent to database.
 This demonstrates full system integration.
 """
-import os
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
-from unittest.mock import patch
 
 from app.main import app
 from app.db import init_db, SessionLocal
 from app.models import orm
-from app.config import get_settings
+from app.api.deps import get_agent_app
+from app.services.gemini_adapter import GeminiAdapter
+from app.services.orchestrator import AgentCodeCraftApp
+from app.services.policy_engine import PolicyEngine
+from app.services.static_analysis import StaticAnalysisService
 
 
 # Initialize test client
-client = TestClient(app)
 init_db()
 
 
@@ -30,6 +30,34 @@ class TestEndToEndADKWorkflow:
         init_db()
         yield
         # Cleanup handled by test isolation
+
+    @pytest.fixture
+    def adk_enabled_client(self):
+        """Create a test client with ADK enabled."""
+        # Ensure .env file is loaded by clearing config cache
+        from app.config import get_settings
+        get_settings.cache_clear()
+        
+        # Create ADK-enabled agent app
+        # GeminiAdapter will now use API key from config/.env
+        adapter = GeminiAdapter()
+        policy_engine = PolicyEngine()
+        static_analysis = StaticAnalysisService()
+        adk_enabled_app = AgentCodeCraftApp(
+            adapter=adapter,
+            policy_engine=policy_engine,
+            static_analysis=static_analysis,
+            use_adk=True
+        )
+        
+        # Override the dependency
+        app.dependency_overrides[get_agent_app] = lambda: adk_enabled_app
+        
+        client = TestClient(app)
+        yield client
+        
+        # Cleanup: remove override
+        app.dependency_overrides.clear()
 
     @pytest.fixture
     def sample_policy_profile(self):
@@ -81,7 +109,7 @@ def safe_function():
     return 2 + 2
 """
 
-    def test_complete_workflow_with_adk_enabled(self, sample_policy_profile, sample_code):
+    def test_complete_workflow_with_adk_enabled(self, adk_enabled_client, sample_policy_profile, sample_code):
         """
         Test complete workflow: API -> Orchestrator -> ADK Agent -> Database.
         
@@ -92,11 +120,10 @@ def safe_function():
         4. Results are saved to database
         5. Response contains all expected fields
         
-        Note: This test requires ADK to be enabled via USE_ADK=true in .env file.
-        If ADK is not enabled, the test will use the manual orchestrator path.
+        This test explicitly enables ADK using dependency override.
         """
         # Make API request
-        response = client.post(
+        response = adk_enabled_client.post(
             "/refactor",
             json={
                 "user_id": "e2e_test_user",
@@ -161,15 +188,19 @@ def safe_function():
         finally:
             db.close()
 
-    def test_workflow_handles_invalid_code(self, sample_policy_profile):
-        """Test workflow handles invalid code gracefully."""
+    def test_workflow_handles_invalid_code(self, adk_enabled_client, sample_policy_profile):
+        """
+        Test workflow handles invalid code gracefully.
+        
+        Uses ADK agent which has pre-flight validation that catches syntax errors
+        before attempting refactoring.
+        """
         invalid_code = """
 def broken_function(
     # Missing closing parenthesis
     return 42
 """
-        
-        response = client.post(
+        response = adk_enabled_client.post(
             "/refactor",
             json={
                 "user_id": "e2e_test_user",
@@ -181,12 +212,14 @@ def broken_function(
             }
         )
         
-        # Should either fail gracefully or handle error
-        # (Depends on implementation - could be 400 or 500)
-        assert response.status_code in [400, 422, 500]
+        # ADK agent's pre-flight checks should catch invalid syntax
+        # and return 400 or 500 with appropriate error message
+        assert response.status_code in [400, 422, 500], \
+            f"Expected error status, got {response.status_code}: {response.text}"
 
     def test_workflow_handles_missing_policy(self, sample_code):
         """Test workflow handles missing policy profile."""
+        client = TestClient(app)
         response = client.post(
             "/refactor",
             json={
@@ -202,9 +235,9 @@ def broken_function(
         assert response.status_code == 404
         assert "not found" in response.json()["detail"].lower()
 
-    def test_workflow_metrics_accuracy(self, sample_policy_profile, sample_code):
+    def test_workflow_metrics_accuracy(self, adk_enabled_client, sample_policy_profile, sample_code):
         """Test that workflow produces accurate metrics."""
-        response = client.post(
+        response = adk_enabled_client.post(
             "/refactor",
             json={
                 "user_id": "e2e_test_user",

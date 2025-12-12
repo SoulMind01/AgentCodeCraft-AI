@@ -1,0 +1,105 @@
+profile:
+  name: Comprehensive Python Policy
+  domain: python
+  version: "1.0"
+rules:
+  # Security Rules
+  - key: no_eval
+    description: "Do not use eval() as it can execute arbitrary code"
+    category: security
+    expression: "eval\\s*\\("
+    severity: high
+    auto_fixable: false
+    fix_prompt: "Replace eval() with safer alternatives like ast.literal_eval() for literals, or direct computation for expressions"
+  
+  - key: no_exec
+    description: "Do not use exec() as it can execute arbitrary code"
+    category: security
+    expression: "exec\\s*\\("
+    severity: high
+    auto_fixable: false
+    fix_prompt: "Replace exec() with safer alternatives. Consider using compile() with restricted mode or refactoring to avoid dynamic code execution"
+  
+  - key: no_hardcoded_secrets
+    description: "Avoid hardcoded passwords, API keys, or secrets"
+    category: security
+    expression: "(password|api_key|secret|token|credential)\\s*=\\s*[\"'][^\"']{8,}[\"']"
+    severity: high
+    auto_fixable: false
+    fix_prompt: "Move secrets to environment variables or a secure secrets manager. Use os.getenv() or a secrets management library"
+  
+  - key: no_unsafe_deserialization
+    description: "Avoid using pickle.loads() with untrusted data"
+    category: security
+    expression: "pickle\\.loads\\s*\\("
+    severity: medium
+    auto_fixable: false
+    fix_prompt: "Use safer serialization formats like JSON for untrusted data, or ensure data source is trusted"
+  
+  # Code Quality Rules
+  - key: no_bare_except
+    description: "Avoid bare except clauses that catch all exceptions"
+    category: code_quality
+    expression: "except\\s*:"
+    severity: medium
+    auto_fixable: true
+    fix_prompt: "Specify the exception type, e.g., except ValueError: or except Exception: with proper handling"
+  
+  - key: no_global_variables
+    description: "Avoid global variables; prefer function parameters or class attributes"
+    category: code_quality
+    expression: "^\\s*global\\s+\\w+"
+    severity: low
+    auto_fixable: false
+    fix_prompt: "Refactor to use function parameters, return values, or class-based design instead of global state"
+  
+  - key: no_long_functions
+    description: "Functions should not exceed 50 lines"
+    category: code_quality
+    expression: ""  # This would be checked by static analysis, not regex
+    severity: low
+    auto_fixable: false
+    fix_prompt: "Break down long functions into smaller, focused functions with single responsibilities"
+  
+  # Performance Rules
+  - key: no_string_concatenation_in_loop
+    description: "Avoid string concatenation in loops; use join() instead"
+    category: performance
+    expression: "\\+\\s*=\\s*[\"'][^\"']*[\"']"
+    severity: medium
+    auto_fixable: true
+    fix_prompt: "Use ''.join(list_of_strings) instead of concatenating strings in a loop for better performance"
+  
+  - key: prefer_list_comprehension
+    description: "Prefer list comprehensions over map() and filter() for readability"
+    category: performance
+    expression: "(map|filter)\\s*\\("
+    severity: low
+    auto_fixable: true
+    fix_prompt: "Convert map() and filter() calls to list comprehensions for better readability and performance"
+  
+  # Style Rules
+  - key: no_trailing_whitespace
+    description: "Remove trailing whitespace"
+    category: style
+    expression: "[ \\t]+$"
+    severity: low
+    auto_fixable: true
+    fix_prompt: "Remove trailing whitespace from lines"
+  
+  - key: prefer_f_strings
+    description: "Prefer f-strings over .format() or % formatting"
+    category: style
+    expression: "\\.format\\s*\\("
+    severity: low
+    auto_fixable: true
+    fix_prompt: "Convert .format() calls to f-strings for better readability, e.g., f'Hello {name}' instead of 'Hello {}'.format(name)"
+  
+  - key: no_print_statements
+    description: "Avoid print() statements in production code; use logging instead"
+    category: style
+    expression: "^[^#]*print\\s*\\("
+    severity: low
+    auto_fixable: true
+    fix_prompt: "Replace print() with logging.getLogger(__name__).info() or appropriate logging level"
+

@@ -77,13 +77,24 @@ def run_refactor(
     db.commit()
     db.refresh(session)
 
-    suggestions, metric, violations, refactored_code = agent_app.run_refactor_session(
-        db,
-        session=session,
-        code=payload.code,
-        ast_summary=None,
-        file_path=payload.file_path or f"submission.{payload.language}",
-    )
+    try:
+        suggestions, metric, violations, refactored_code = agent_app.run_refactor_session(
+            db,
+            session=session,
+            code=payload.code,
+            ast_summary=None,
+            file_path=payload.file_path or f"submission.{payload.language}",
+        )
+    except ValueError as e:
+        # Handle validation errors (e.g., invalid syntax, missing policy, etc.)
+        session.status = "failed"
+        db.commit()
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        # Handle other errors
+        session.status = "failed"
+        db.commit()
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
     response = RefactorResponse(
         session=RefactorSessionModel(

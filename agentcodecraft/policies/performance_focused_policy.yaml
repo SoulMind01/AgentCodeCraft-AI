@@ -1,0 +1,38 @@
+profile:
+  name: Performance Focused Policy
+  domain: python
+  version: "1.0"
+rules:
+  # Performance Rules
+  - key: no_string_concatenation_in_loop
+    description: "Avoid string concatenation in loops; use join() for better performance"
+    category: performance
+    expression: "\\+\\s*=\\s*[\"'][^\"']*[\"']"
+    severity: high
+    auto_fixable: true
+    fix_prompt: "Replace string concatenation in loops with ''.join(list_of_strings) for O(n) instead of O(n²) performance"
+  
+  - key: prefer_list_comprehension
+    description: "Prefer list comprehensions over map() and filter() for better performance and readability"
+    category: performance
+    expression: "(map|filter)\\s*\\("
+    severity: medium
+    auto_fixable: true
+    fix_prompt: "Convert map() and filter() to list comprehensions: [f(x) for x in items] instead of list(map(f, items))"
+  
+  - key: avoid_repeated_calculations
+    description: "Cache repeated calculations in loops"
+    category: performance
+    expression: ""  # Would be detected by static analysis
+    severity: low
+    auto_fixable: false
+    fix_prompt: "Move repeated calculations outside loops or cache results to avoid redundant computation"
+  
+  - key: prefer_generators_for_large_data
+    description: "Use generators instead of lists for large datasets"
+    category: performance
+    expression: ""  # Would be detected by static analysis
+    severity: low
+    auto_fixable: false
+    fix_prompt: "Use generator expressions (x for x in items) instead of list comprehensions for large datasets to save memory"
+
