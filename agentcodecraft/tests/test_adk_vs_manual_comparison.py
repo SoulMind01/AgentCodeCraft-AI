@@ -408,7 +408,7 @@ def calculate_product(a, b):
             
             # Wait 15 seconds between ADK and Manual calls to avoid rate limits
             # Free tier: 5 requests/minute for gemini-2.5-flash
-            time.sleep(15)
+            time.sleep(5)
             
             # Run with Manual
             manual_session = self._create_test_session(db, "comparison_test_profile")
